@@ -13,10 +13,10 @@ use tauri::menu::{MenuBuilder, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::{Emitter, Manager, State};
 use tauri_plugin_dialog::DialogExt;
 use venator_engine::{
-    BasicConnectionFilter, BasicEventFilter, BasicSpanFilter, ConnectionView, DeleteFilter,
-    DeleteMetrics, Engine, EventView, FallibleFilterPredicate, FileStorage, FilterPredicate,
-    FilterPredicateSingle, FilterPropertyKind, InputError, Order, Query, SpanView, StatsView,
-    SubscriptionId, Timestamp, TransientStorage, ValuePredicate,
+    BasicConnectionFilter, BasicEventFilter, BasicSpanFilter, CachedStorage, ConnectionView,
+    DeleteFilter, DeleteMetrics, Engine, EventView, FallibleFilterPredicate, FileStorage,
+    FilterPredicate, FilterPredicateSingle, FilterPropertyKind, InputError, Order, Query, SpanView,
+    StatsView, SubscriptionId, Timestamp, TransientStorage, ValuePredicate,
 };
 
 mod ingress;
@@ -269,16 +269,6 @@ async fn unsubscribe_from_events(
 }
 
 #[tauri::command]
-fn create_attribute_index(engine: State<'_, Engine>, name: String) {
-    engine.add_attribute_index(name)
-}
-
-#[tauri::command]
-fn remove_attribute_index(engine: State<'_, Engine>, name: String) {
-    engine.remove_attribute_index(name)
-}
-
-#[tauri::command]
 async fn get_status(
     engine: State<'_, Engine>,
     dataset: State<'_, DatasetConfig>,
@@ -383,8 +373,10 @@ fn main() {
 
     dataset.prepare();
     let engine = match &dataset {
-        DatasetConfig::Default(path) => Engine::new(FileStorage::new(path)),
-        DatasetConfig::File(path) => Engine::new(FileStorage::new(path)),
+        DatasetConfig::Default(path) => {
+            Engine::new(CachedStorage::new(10000, FileStorage::new(path)))
+        }
+        DatasetConfig::File(path) => Engine::new(CachedStorage::new(10000, FileStorage::new(path))),
         DatasetConfig::Memory => Engine::new(TransientStorage::new()),
     };
 
@@ -554,8 +546,6 @@ fn main() {
                             true,
                             None::<&str>,
                         )?,
-                        &PredefinedMenuItem::separator(handle)?,
-                        &MenuItem::new(handle, "Manage indexes", false, None::<&str>)?,
                     ],
                 )?)
                 .item(&Submenu::with_items(
@@ -706,8 +696,6 @@ fn main() {
             get_stats,
             subscribe_to_events,
             unsubscribe_from_events,
-            create_attribute_index,
-            remove_attribute_index,
             get_status,
         ])
         .run(tauri::generate_context!())
