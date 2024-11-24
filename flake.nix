@@ -30,7 +30,10 @@
           npmDeps = pkgs.fetchNpmDeps {
             name = "${pname}-npm-deps-${version}";
             src = "${src}/venator-app";
-            hash = "sha256-e+DE0eOxjTQimr75LZKVD19qHhdxtLAKHhKAucCTLpk=";
+
+						# NOTE: run `prefetch-npm-deps package-lock.json > .nix_npm_hash` in the venator-app dir to update this
+						# has to be done any time the lock file changes (ie npm deps change)
+            hash = builtins.readFile "${src}/venator-app/.nix_npm_hash";
           };
           npmRoot = "venator-app";
 
