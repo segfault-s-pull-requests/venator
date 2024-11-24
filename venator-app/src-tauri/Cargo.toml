@@ -36,6 +36,16 @@ tokio = { version = "1.38.0", features = ["rt-multi-thread", "macros", "net"] }
 
 venator-engine = { version = "0.2.1", features = ["persist"] }
 
+# HACK for Nix Package: 
+# A dependency (surrealist -> tauri -> **reqwest**) contains hyper-tls as an actually optional dependency. 
+# It ends up in the `Cargo.lock` file of tauri, but not in the one of surrealist. 
+# Add the dep here to make sure it's in our Cargo.lock
+# This may be a result of the following bug: https://github.com/rust-lang/cargo/issues/10801
+# see: https://github.com/NixOS/nixpkgs/blob/23605324ae65b3be6a68e9163d232d56b2100f7a/pkgs/by-name/su/surrealist/package.nix#L52C1-L60C5
+hyper-tls = { version="0.6.0", optional=true }
+rustls-pemfile = { version= "*", optional=true }
+
+
 [features]
 default = ["custom-protocol"]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
