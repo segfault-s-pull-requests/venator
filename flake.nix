@@ -14,22 +14,6 @@
         pkgs = nixpkgs.legacyPackages.${system};
         lib = nixpkgs.lib;
       in rec {
-        # packages.default = pkgs.rustPlatform.buildRustPackage {
-        #   pname = "venator-app";
-        #   version = "0.1.0";
-
-        #   inherit buildInputs nativeBuildInputs;
-
-        #   preBuild = ''
-        #     cd venator-app;
-        #     npm run build
-        #   '';
-
-        #   src = pkgs.lib.cleanSource ./.;
-
-        #   cargoLock.lockFile = ./Cargo.lock;
-        # };
-
         packages.default = pkgs.rustPlatform.buildRustPackage rec {
           # . . .
           pname = "venator";
